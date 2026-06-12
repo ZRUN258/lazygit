@@ -129,6 +129,7 @@ type Gui struct {
 	tabClickBindings         []*tabClickBinding
 	viewMouseBindings        []*ViewMouseBinding
 	lastClick                *clickInfo
+	lastTcellKeyEvent        *tcellKeyEventSignature
 	gEvents                  chan GocuiEvent
 	userEvents               chan userEvent
 	views                    []*View

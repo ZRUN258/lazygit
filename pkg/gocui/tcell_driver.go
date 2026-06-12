@@ -5,6 +5,8 @@
 package gocui
 
 import (
+	"time"
+
 	"github.com/gdamore/tcell/v3"
 	"github.com/gdamore/tcell/v3/vt"
 )
@@ -295,6 +297,9 @@ func (g *Gui) pollEvent() GocuiEvent {
 		w, h := tev.Size()
 		return GocuiEvent{Type: eventResize, Width: w, Height: h}
 	case *tcell.EventKey:
+		if g.isDuplicateTcellKey(tev) {
+			return GocuiEvent{Type: eventNone}
+		}
 		return gocuiEventFromTcellKey(tev)
 	case *tcell.EventMouse:
 		x, y := tev.Position()
@@ -391,6 +396,38 @@ func (g *Gui) pollEvent() GocuiEvent {
 	default:
 		return GocuiEvent{Type: eventNone}
 	}
+}
+
+type tcellKeyEventSignature struct {
+	when     time.Time
+	key      tcell.Key
+	str      string
+	mod      tcell.ModMask
+	pressed  bool
+	physical tcell.Key
+	repeat   int
+}
+
+func newTcellKeyEventSignature(tev *tcell.EventKey) tcellKeyEventSignature {
+	return tcellKeyEventSignature{
+		when:     tev.When(),
+		key:      tev.Key(),
+		str:      tev.Str(),
+		mod:      tev.Modifiers(),
+		pressed:  tev.Pressed(),
+		physical: tev.Physical(),
+		repeat:   tev.Repeat(),
+	}
+}
+
+func (g *Gui) isDuplicateTcellKey(tev *tcell.EventKey) bool {
+	signature := newTcellKeyEventSignature(tev)
+	if g.lastTcellKeyEvent != nil && signature == *g.lastTcellKeyEvent {
+		return true
+	}
+
+	g.lastTcellKeyEvent = &signature
+	return false
 }
 
 func gocuiEventFromTcellKey(tev *tcell.EventKey) GocuiEvent {
