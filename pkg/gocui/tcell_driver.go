@@ -52,11 +52,17 @@ var runeReplacements = map[rune]string{
 	'◄': "<",
 }
 
+func tcellScreenOptions() []tcell.TerminfoScreenOption {
+	return []tcell.TerminfoScreenOption{
+		tcell.OptKeyboardProtocol(tcell.LegacyKeyboard),
+	}
+}
+
 // tcellInit initializes tcell screen for use.
 func (g *Gui) tcellInit(runeReplacements map[rune]string) error {
 	tcell.SetEncodingFallback(tcell.EncodingFallbackASCII)
 
-	s, e := tcell.NewScreen()
+	s, e := tcell.NewScreen(tcellScreenOptions()...)
 	if e != nil {
 		return e
 	}
@@ -85,7 +91,7 @@ func registerRuneFallbacks(s tcell.Screen, additional map[rune]string) {
 // tcellInitSimulation initializes tcell screen for use.
 func (g *Gui) tcellInitSimulation(width int, height int) error {
 	mt := vt.NewMockTerm(vt.MockOptSize{X: vt.Col(width), Y: vt.Row(height)})
-	s, e := tcell.NewTerminfoScreenFromTty(mt)
+	s, e := tcell.NewTerminfoScreenFromTty(mt, tcellScreenOptions()...)
 	if e != nil {
 		return e
 	}
