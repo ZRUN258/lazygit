@@ -70,6 +70,7 @@ If you're a mere mortal like me and you're tired of hearing how powerful git is 
 ## Table of contents
 
 - [Sponsors](#sponsors)
+- [Windows LazyVim Fix](#windows-lazyvim-fix)
 - [Elevator Pitch](#elevator-pitch)
 - [Table of contents](#table-of-contents)
 - [Features](#features)
@@ -130,6 +131,75 @@ If you're a mere mortal like me and you're tired of hearing how powerful git is 
 - [Alternatives](#alternatives)
 
 Lazygit is not my fulltime job but it is a hefty part time job so if you want to support the project please consider [sponsoring me](https://github.com/sponsors/jesseduffield)
+
+## Windows LazyVim Fix
+
+This fork carries a Windows-focused fix for a LazyVim/Neovim terminal input bug.
+When lazygit is opened from LazyVim with `<leader>gg`, some Windows users see every key processed twice: `Tab` moves two rows, `j` moves two rows, and commit-message text appears as doubled characters.
+
+The change is in the tcell-to-gocui input boundary:
+
+- `pkg/gocui/tcell_driver.go` forces tcell to use the legacy keyboard protocol when lazygit starts.
+- `pkg/gocui/tcell_driver.go` also ignores immediately repeated tcell key events whose full signature is identical.
+- `pkg/gocui/gui.go` stores the last tcell key event signature used by that duplicate filter.
+- `pkg/gocui/tcell_driver_test.go` covers the keyboard protocol selection, key-release handling, and duplicate-event filtering.
+
+This is intended as a temporary Windows build for users affected by duplicate input in LazyVim. If the upstream lazygit release you are using no longer has this bug, prefer the official release.
+
+### Install This Build Locally
+
+Download `lazygit-*-windows-amd64.zip` from this fork's GitHub Releases, unzip it, and put `lazygit.exe` somewhere permanent, for example:
+
+```powershell
+$installDir = "$env:LOCALAPPDATA\Programs\lazygit-fixed"
+New-Item -ItemType Directory -Force $installDir | Out-Null
+Copy-Item .\lazygit.exe "$installDir\lazygit.exe" -Force
+
+$userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+if (($userPath -split ';') -notcontains $installDir) {
+  [Environment]::SetEnvironmentVariable("Path", "$installDir;$userPath", "User")
+}
+```
+
+Open a new terminal and check that this build is first on `PATH`:
+
+```powershell
+where.exe lazygit
+lazygit --version
+```
+
+Inside Neovim/LazyVim, confirm the executable path:
+
+```vim
+:echo exepath("lazygit")
+```
+
+It should point to the directory where you installed this build.
+
+### Install With Winget
+
+If this fork has been published to the Windows Package Manager community repository, install it with:
+
+```powershell
+winget install --id ZRUN258.LazygitLazyVimFix -e
+```
+
+If the winget package has not been accepted yet, use the GitHub Release zip and the manual installation steps above.
+
+### Build From Source
+
+From this repository:
+
+```powershell
+go build -o .\dist\lazygit.exe .
+```
+
+Then either run `.\dist\lazygit.exe` directly or put `dist` before the official lazygit location in `PATH`:
+
+```powershell
+$env:Path="$PWD\dist;$env:Path"
+nvim
+```
 
 ## Features
 
