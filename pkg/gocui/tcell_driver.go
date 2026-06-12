@@ -295,20 +295,7 @@ func (g *Gui) pollEvent() GocuiEvent {
 		w, h := tev.Size()
 		return GocuiEvent{Type: eventResize, Width: w, Height: h}
 	case *tcell.EventKey:
-		k := tev.Key()
-		ch := ""
-		if k == tcell.KeyRune {
-			ch = tev.Str()
-		} else if k >= tcell.KeyCtrlA && k <= tcell.KeyCtrlZ {
-			ch = string(rune('a' + (k - tcell.KeyCtrlA)))
-			k = tcell.KeyRune
-		}
-		mod := tev.Modifiers()
-
-		return GocuiEvent{
-			Type: eventKey,
-			Key:  NewKey(KeyName(k), ch, Modifier(mod)),
-		}
+		return gocuiEventFromTcellKey(tev)
 	case *tcell.EventMouse:
 		x, y := tev.Position()
 		button := tev.Buttons()
@@ -403,5 +390,26 @@ func (g *Gui) pollEvent() GocuiEvent {
 		}
 	default:
 		return GocuiEvent{Type: eventNone}
+	}
+}
+
+func gocuiEventFromTcellKey(tev *tcell.EventKey) GocuiEvent {
+	if !tev.Pressed() {
+		return GocuiEvent{Type: eventNone}
+	}
+
+	k := tev.Key()
+	ch := ""
+	if k == tcell.KeyRune {
+		ch = tev.Str()
+	} else if k >= tcell.KeyCtrlA && k <= tcell.KeyCtrlZ {
+		ch = string(rune('a' + (k - tcell.KeyCtrlA)))
+		k = tcell.KeyRune
+	}
+	mod := tev.Modifiers()
+
+	return GocuiEvent{
+		Type: eventKey,
+		Key:  NewKey(KeyName(k), ch, Modifier(mod)),
 	}
 }
