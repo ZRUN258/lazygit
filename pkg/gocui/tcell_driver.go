@@ -431,10 +431,6 @@ func (g *Gui) isDuplicateTcellKey(tev *tcell.EventKey) bool {
 }
 
 func gocuiEventFromTcellKey(tev *tcell.EventKey) GocuiEvent {
-	if !tev.Pressed() {
-		return GocuiEvent{Type: eventNone}
-	}
-
 	k := tev.Key()
 	ch := ""
 	if k == tcell.KeyRune {

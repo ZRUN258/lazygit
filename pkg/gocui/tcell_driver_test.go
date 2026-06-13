@@ -14,10 +14,11 @@ func TestNewGuiUsesLegacyKeyboardProtocol(t *testing.T) {
 	assert.Equal(t, tcell.LegacyKeyboard, g.screen.KeyboardProtocol())
 }
 
-func TestTcellKeyReleaseEventsAreIgnored(t *testing.T) {
+func TestTcellKeyReleaseEventsAreHandled(t *testing.T) {
 	ev := gocuiEventFromTcellKey(tcell.NewEventKeyEx(tcell.KeyRune, "a", tcell.ModNone, false, tcell.Key('a'), 1))
 
-	assert.Equal(t, eventNone, ev.Type)
+	assert.Equal(t, eventKey, ev.Type)
+	assert.True(t, ev.Key.Equals(NewKeyRune('a')))
 }
 
 func TestTcellKeyPressEventsAreHandled(t *testing.T) {
