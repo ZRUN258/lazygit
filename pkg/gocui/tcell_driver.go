@@ -56,7 +56,7 @@ var runeReplacements = map[rune]string{
 
 func tcellScreenOptions() []tcell.TerminfoScreenOption {
 	return []tcell.TerminfoScreenOption{
-		tcell.OptKeyboardProtocol(tcell.LegacyKeyboard),
+		tcell.OptAdvancedKeys(true),
 	}
 }
 
@@ -431,6 +431,10 @@ func (g *Gui) isDuplicateTcellKey(tev *tcell.EventKey) bool {
 }
 
 func gocuiEventFromTcellKey(tev *tcell.EventKey) GocuiEvent {
+	if !tev.Pressed() {
+		return GocuiEvent{Type: eventNone}
+	}
+
 	k := tev.Key()
 	ch := ""
 	if k == tcell.KeyRune {
@@ -440,6 +444,13 @@ func gocuiEventFromTcellKey(tev *tcell.EventKey) GocuiEvent {
 		k = tcell.KeyRune
 	}
 	mod := tev.Modifiers()
+
+	// With advanced key reporting, Shift-Tab comes as KeyTab+ModShift
+	// rather than KeyBacktab. Normalize for backward compatibility.
+	if k == tcell.KeyTab && mod&tcell.ModShift != 0 {
+		k = tcell.KeyBacktab
+		mod &^= tcell.ModShift
+	}
 
 	return GocuiEvent{
 		Type: eventKey,
